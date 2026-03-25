@@ -1,0 +1,237 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --accent: #6366f1;
+  --accent2: #22d3ee;
+}
+
+/* Light clean AI app background */
+body {
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+h1, h2, h3 {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+
+/* Soft modern panels */
+.panel {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 28px;
+  box-shadow: 0 10px 40px -15px rgb(0 0 0 / 0.08);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Big textarea */
+.textarea {
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 28px;
+  font-size: 1.125rem;
+  line-height: 1.7;
+  resize: none;
+  transition: all 0.3s ease;
+
+}
+#pricearea{
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#settingsmodal{
+  z-index: 10;
+    background: white;
+    border: 1px solid #000;
+    border-radius: 10px;
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    font-size: larger;
+    overflow: auto;
+    background-image: linear-gradient(45deg, #4a46e0, transparent);
+}
+.setbutton{
+ border: 1px solid #000;
+    border-radius: 2px;
+    height: 30px;
+    background-image: linear-gradient(45deg, #0b20e3, transparent);
+    font-size: larger;
+}
+.closemodal{
+  top: 0;
+    right: 0;
+    color: white;
+    background: red;
+    border-radius: 10px;
+    z-index: 20;
+}
+#navbutton{
+  background-image: linear-gradient(45deg, #5c72f1, #29c8ef);
+    color: white;
+    border: white;
+}
+#planview{
+    background-image: linear-gradient(45deg, #9023db, #28c8ee);
+    color: white;
+}
+/* ====================== SETTINGS MODAL DESIGN SYSTEM ====================== */
+.settings-modal {
+  background: #fdfdf6;
+  border-radius: 28px;
+  box-shadow: 0 25px 70px -15px rgb(0 0 0 / 0.15);
+  border: 1px solid #e0e7ff;
+  width: 100%;
+}
+
+.settings-header {
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  padding: 28px 32px;
+  position: relative;
+  color: white;
+}
+
+.settings-section {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid #f1f5f9;
+}
+
+.settings-section-title {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #334155;
+  margin-bottom: 16px;
+  letter-spacing: -0.01em;
+}
+
+.settings-label {
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: #475569;
+  margin-bottom: 8px;
+}
+
+.settings-input,
+.settings-textarea {
+  width: 100%;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 16px 20px;
+  font-size: 1.05rem;
+  transition: all 0.3s ease;
+}
+
+.settings-input:focus,
+.settings-textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+  outline: none;
+}
+
+.settings-textarea {
+  resize: vertical;
+  font-family: inherit;
+  line-height: 1.6;
+}
+
+/* Enhanced setbutton (keeps your class but modernized) */
+.setbutton {
+  height: auto;
+  padding: 16px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  border: 1px solid #e2e8f0;
+}
+
+.setbutton:hover {
+  transform: translateY(-1px);
+}
+
+.shwpsw{
+  display: inline;
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+
+#inputpanel{
+  display: flex;
+  align-content: space-between;
+  flex-wrap:wrap;
+  
+}
+.textarea:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 5px rgba(99, 102, 241, 0.12);
+}
+.portalfield{
+  height: 35px;
+  border: 0 none #000;
+  border-bottom: 1px solid blue;
+  width:90%;
+}
+/* Premium button */
+.btn-primary {
+  background: linear-gradient(135deg, #6366f1, #22d3ee);
+  color: white;
+  font-weight: 600;
+  padding: 18px 32px;
+  border-radius: 20px;
+  font-size: 1.1rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px -10px rgba(99, 102, 241, 0.4);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 40px -10px rgba(99, 102, 241, 0.5);
+}
+
+/* Quote card */
+.quote-card {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 24px;
+  padding: 40px;
+  box-shadow: 0 15px 50px -20px rgb(0 0 0 / 0.1);
+  transition: all 0.5s ease;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
