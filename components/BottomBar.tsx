@@ -1,6 +1,7 @@
 "use client";
 
 import { Crown } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function BottomBar({
   plan,
@@ -11,6 +12,7 @@ export default function BottomBar({
   remaining: string | number;
   total: string | number;
 }) {
+  const router = useRouter();
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 py-4 z-50">
       <div className="max-w-4xl mx-auto px-6 flex items-center justify-between text-sm">
@@ -23,7 +25,7 @@ export default function BottomBar({
 
         {plan === "free" && (
           <button
-            onClick={() => alert("Upgrade modal coming soon ✨")}
+            onClick={() => router.push('/pro')}
             className="flex items-center gap-2 bg-gradient-to-r from-indigo-500 to-cyan-400 text-white px-6 py-2.5 rounded-2xl font-medium hover:shadow-lg transition-all active:scale-95"
             id='planview'
           >

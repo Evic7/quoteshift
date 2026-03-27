@@ -7,6 +7,8 @@ import OutputPanel from "@/components/OutputPanel";
 import BottomBar from "@/components/BottomBar";
 import SettingsModal from "@/components/SettingsModal";
 import { createClient } from "@/lib/supabase/client";
+import { validUser } from '@/lib/auth';
+import { useRouter } from "next/navigation";
 
 // ────────────────────────────────────────────────
 // YOUR MAIN QUOTE PROMPT
@@ -373,7 +375,7 @@ export default function Home() {
   const [plan, setPlan] = useState<"free" | "pro">("free");
   const [quotesRemaining, setQuotesRemaining] = useState<number>(3);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
-
+  const router = useRouter();
   const [settings, setSettings] = useState<any>(null);
 
   // Load user profile & settings
@@ -421,16 +423,32 @@ useEffect(() => {
   }
 }, [showSettings]);
 
+  //verify user 
+ 
+
+const verifyUserBeforeGenerate = async () => {
+  const user = await validUser();
+  if (!user) {
+    //alert("Session expired. Please log in again.");
+    router.push("/login");   // or window.location.href = "/login"
+    return false;
+  }
+  return true;
+};
 
 
   const handleGenerate = async () => {
     if (!inputText.trim()) return;
+    // Check user validity before generating
+    const isValid = await verifyUserBeforeGenerate();
+    if (!isValid) return;
 
+  if (!inputText.trim()) return; 
     if (plan === "free" && quotesRemaining <= 0) {
       alert("No free quotes left. Upgrade to Pro.");
       return;
     }
-
+    
     setLoading(true);
     setQuote(null);
 
