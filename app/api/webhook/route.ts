@@ -1,74 +1,91 @@
 import { NextRequest } from "next/server";
+import { Whop } from "@whop/sdk";
 import { createClient } from "@/lib/supabase/server";
-import crypto from "crypto";
 
-const WEBHOOK_SECRET = process.env.WHOP_WEBHOOK_SECRET!;
+// Initialize Whop SDK for Company Webhook
+const whop = new Whop({
+  apiKey: process.env.WHOP_API_KEY!,
+  webhookKey: process.env.WHOP_WEBHOOK_SECRET!,
+});
 
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.text();
-    const signature = request.headers.get("whop-signature");
+    const requestBodyText = await request.text();
+    const headers = Object.fromEntries(request.headers);
 
-    if (!signature) {
-      return Response.json({ error: "Missing signature" }, { status: 401 });
-    }
-
-    // Verify signature (Whop uses HMAC SHA256)
-    const expectedSignature = crypto
-      .createHmac("sha256", WEBHOOK_SECRET)
-      .update(body)
-      .digest("hex");
-
-    if (signature !== expectedSignature) {
-      console.error("Invalid webhook signature");
-      return Response.json({ error: "Invalid signature" }, { status: 401 });
-    }
-
-    // Parse payload
-    const payload = JSON.parse(body);
-    const { event, data } = payload;
-
-    console.log(`[Whop Webhook] Event: ${event}`);
+    // Validate webhook using Whop SDK
+    const webhookData = whop.webhooks.unwrap(requestBodyText, { headers });
 
     const result = {
       success: true,
-      event,
+      event: webhookData.type,
       message: "Webhook processed",
+      timestamp: new Date().toISOString(),
     };
 
-    // Handle purchase events
-    if (event === "purchase.created" || event === "purchase.updated") {
-      const { email, status, user_id } = data || {};
+    const data = webhookData.data as any;
+    const email = data?.email || data?.user?.email || data?.customer?.email;
+    
+    // Guard: no email = no action
+    if (!email) {
+      return Response.json({
+        success: false,
+        message: "No email found in webhook data",
+        timestamp: new Date().toISOString(),
+      }, { status: 400 });
+    }
 
-      if (status === "active" && email) {
-        const supabase = await createClient();
+    const supabase = await createClient();
 
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            plan: "pro",
-            quotes_remaining: -1,        // -1 = unlimited
-          })
-          .eq("email", email);
+    // Upgrade to Pro
+    if (
+      (webhookData.type === "payment.succeeded" || 
+       webhookData.type === "membership.activated") && 
+      data?.status === "active"
+    ) {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          plan: "pro",
+          quotes_remaining: -1,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("email", email);
 
-        if (error) {
-          console.error("Failed to update plan:", error);
-          result.success = false;
-          result.message = "Failed to update user to Pro";
-        } else {
-          result.message = `Successfully upgraded ${email} to Pro`;
-        }
+      if (error) {
+        result.success = false;
+        result.message = `Failed to upgrade ${email}`;
+      } else {
+        result.message = `User ${email} upgraded to Pro`;
       }
     }
 
-    // Always return 200 quickly
+    // Downgrade on cancellation
+    if (webhookData.type === "membership.deactivated") {
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          plan: "free",
+          quotes_remaining: 3,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("email", email);
+
+      if (error) {
+        result.success = false;
+        result.message = `Failed to downgrade ${email}`;
+      } else {
+        result.message = `User ${email} downgraded to Free`;
+      }
+    }
+
     return Response.json(result, { status: 200 });
 
   } catch (error: any) {
-    console.error("Webhook error:", error);
-    return Response.json({ 
-      success: false, 
-      error: error.message || "Internal error" 
-    }, { status: 500 });
+    return Response.json({
+      success: false,
+      error: error.message || "Webhook processing failed",
+      timestamp: new Date().toISOString(),
+    }, { status: 400 });
   }
 }
