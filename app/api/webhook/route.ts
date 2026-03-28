@@ -35,6 +35,20 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
+    // Find user ID by email from auth.users
+    const { data: { users }, error: userError } = await supabase.auth.admin.listUsers();
+    const user = users?.find(u => u.email === email);
+
+    if (!user) {
+      return Response.json({
+        success: false,
+        message: `User with email ${email} not found`,
+        timestamp: new Date().toISOString(),
+      }, { status: 400 });
+    }
+
+    const userId = user.id;
+
     if (
       (webhookData.type === "payment.succeeded" || 
        webhookData.type === "membership.activated") && 
@@ -47,16 +61,16 @@ export async function POST(request: NextRequest) {
           quotes_remaining: -1,
           updated_at: new Date().toISOString(),
         })
-        .eq("email", email)
+        .eq("id", userId)
         .select();
 
       if (error) {
         result.success = false;
         result.message = `Failed to upgrade ${email}`;
-        result.data = { email, error: error.message };
+        result.data = { email, userId, error: error.message };
       } else {
         result.message = `User ${email} upgraded to Pro`;
-        result.data = { email, updated: !!updateData?.length };
+        result.data = { email, userId, updated: !!updateData?.length };
       }
     }
 
@@ -68,16 +82,16 @@ export async function POST(request: NextRequest) {
           quotes_remaining: 3,
           updated_at: new Date().toISOString(),
         })
-        .eq("email", email)
+        .eq("id", userId)
         .select();
 
       if (error) {
         result.success = false;
         result.message = `Failed to downgrade ${email}`;
-        result.data = { email, error: error.message };
+        result.data = { email, userId, error: error.message };
       } else {
         result.message = `User ${email} downgraded to Free`;
-        result.data = { email, updated: !!updateData?.length };
+        result.data = { email, userId, updated: !!updateData?.length };
       }
     }
 
