@@ -5,7 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 // Initialize Whop SDK for Company Webhook
 const whop = new Whop({
   apiKey: process.env.WHOP_API_KEY!,
-  webhookKey: process.env.WHOP_WEBHOOK_SECRET!,
+  webhookKey: btoa(process.env.WHOP_WEBHOOK_SECRET || ""), // Add btoa() back
 });
 
 export async function POST(request: NextRequest) {
@@ -26,7 +26,6 @@ export async function POST(request: NextRequest) {
     const data = webhookData.data as any;
     const email = data?.email || data?.user?.email || data?.customer?.email;
     
-    // Guard: no email = no action
     if (!email) {
       return Response.json({
         success: false,
@@ -37,7 +36,6 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Upgrade to Pro
     if (
       (webhookData.type === "payment.succeeded" || 
        webhookData.type === "membership.activated") && 
@@ -60,7 +58,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Downgrade on cancellation
     if (webhookData.type === "membership.deactivated") {
       const { error } = await supabase
         .from("profiles")
