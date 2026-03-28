@@ -2,10 +2,9 @@ import { NextRequest } from "next/server";
 import { Whop } from "@whop/sdk";
 import { createClient } from "@/lib/supabase/server";
 
-// Initialize Whop SDK for Company Webhook
 const whop = new Whop({
   apiKey: process.env.WHOP_API_KEY!,
-  webhookKey: btoa(process.env.WHOP_WEBHOOK_SECRET || ""), // Add btoa() back
+  webhookKey: btoa(process.env.WHOP_WEBHOOK_SECRET || ""),
 });
 
 export async function POST(request: NextRequest) {
@@ -13,7 +12,6 @@ export async function POST(request: NextRequest) {
     const requestBodyText = await request.text();
     const headers = Object.fromEntries(request.headers);
 
-    // Validate webhook using Whop SDK
     const webhookData = whop.webhooks.unwrap(requestBodyText, { headers });
 
     const result = {
@@ -21,6 +19,7 @@ export async function POST(request: NextRequest) {
       event: webhookData.type,
       message: "Webhook processed",
       timestamp: new Date().toISOString(),
+      data: {} as any,
     };
 
     const data = webhookData.data as any;
@@ -41,38 +40,44 @@ export async function POST(request: NextRequest) {
        webhookData.type === "membership.activated") && 
       data?.status === "active"
     ) {
-      const { error } = await supabase
+      const { data: updateData, error } = await supabase
         .from("profiles")
         .update({
           plan: "pro",
           quotes_remaining: -1,
           updated_at: new Date().toISOString(),
         })
-        .eq("email", email);
+        .eq("email", email)
+        .select();
 
       if (error) {
         result.success = false;
         result.message = `Failed to upgrade ${email}`;
+        result.data = { email, error: error.message };
       } else {
         result.message = `User ${email} upgraded to Pro`;
+        result.data = { email, updated: !!updateData?.length };
       }
     }
 
     if (webhookData.type === "membership.deactivated") {
-      const { error } = await supabase
+      const { data: updateData, error } = await supabase
         .from("profiles")
         .update({
           plan: "free",
           quotes_remaining: 3,
           updated_at: new Date().toISOString(),
         })
-        .eq("email", email);
+        .eq("email", email)
+        .select();
 
       if (error) {
         result.success = false;
         result.message = `Failed to downgrade ${email}`;
+        result.data = { email, error: error.message };
       } else {
         result.message = `User ${email} downgraded to Free`;
+        result.data = { email, updated: !!updateData?.length };
       }
     }
 
